@@ -2,44 +2,69 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>n*n padabhanda(aditya)</title>
+<title>N x N Crossword Editor</title>
 <style>
-body { font-family: Arial; text-align: center; }
+body {
+  font-family: Arial;
+  text-align: center;
+}
+
+/* CENTER GRID */
 .grid {
   display: grid;
-  gap: 0;
   margin: 20px auto;
+  justify-content: center;
 }
+
+/* BOX STYLE */
 .cell {
   width: 45px;
   height: 45px;
-  border: 0.5px solid #999;
-  box-sizing: border-box;
+  border: 0.5px solid #bbb;
   position: relative;
   cursor: pointer;
 }
+
 .white { background: white; }
 .black { background: black; }
+
+/* NUMBER STYLE */
 .number {
   position: absolute;
   top: 2px;
   left: 4px;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: bold;
-  color: black;
 }
-button, input { margin: 10px; padding: 8px; }
+
+/* CONTROLS CENTERED BELOW */
+.controls {
+  margin-top: 15px;
+  text-align: center;
+}
+
+button, input {
+  margin: 5px;
+  padding: 8px 12px;
+  font-size: 14px;
+}
 </style>
 </head>
 <body>
-<h1>ADITYA </h1>
+<h1>ADITYA</h1>
 <h2>N x N Crossword Editor</h2>
-<p>Click = black/white | Double click = number</p>
 
-<input type="number" id="sizeInput" placeholder="Enter grid size (e.g. 11)">
+<input type="number" id="sizeInput" placeholder="Enter size (e.g. 11)">
 <button onclick="createGrid()">Create Grid</button>
 
+<!-- GRID -->
 <div id="grid" class="grid"></div>
+
+<!-- CONTROLS BELOW GRID -->
+<div class="controls">
+  <button onclick="toggleCell()">Toggle Black/White</button>
+  <button onclick="setNumber()">Set Number</button>
+</div>
 
 <button onclick="savePuzzle()">Save</button>
 <button onclick="loadPuzzle()">Load</button>
@@ -48,11 +73,13 @@ button, input { margin: 10px; padding: 8px; }
 let size = 0;
 let gridData = [];
 let numberData = [];
+let selectedCell = null;
 
 const grid = document.getElementById("grid");
 
 function createGrid() {
   size = parseInt(document.getElementById("sizeInput").value);
+
   if (!size || size < 2) {
     alert("Enter valid size");
     return;
@@ -71,6 +98,7 @@ function drawGrid() {
 
   for (let i = 0; i < size; i++) {
     for (let j = 0; j < size; j++) {
+
       const cell = document.createElement("div");
       cell.className = "cell " + (gridData[i][j] ? "black" : "white");
 
@@ -81,20 +109,9 @@ function drawGrid() {
         cell.appendChild(span);
       }
 
-      cell.addEventListener("click", function(e) {
-        e.preventDefault();
-        gridData[i][j] = gridData[i][j] ? 0 : 1;
-        if (gridData[i][j] === 1) numberData[i][j] = "";
-        drawGrid();
-      });
-
-      cell.addEventListener("dblclick", function(e) {
-        e.preventDefault();
-        if (gridData[i][j] === 0) {
-          let num = prompt("Enter number:", numberData[i][j]);
-          if (num !== null) numberData[i][j] = num;
-          drawGrid();
-        }
+      // SELECT CELL
+      cell.addEventListener("click", function() {
+        selectedCell = { i, j };
       });
 
       grid.appendChild(cell);
@@ -102,20 +119,51 @@ function drawGrid() {
   }
 }
 
+// TOGGLE
+function toggleCell() {
+  if (!selectedCell) return;
+
+  let { i, j } = selectedCell;
+
+  gridData[i][j] = gridData[i][j] ? 0 : 1;
+
+  if (gridData[i][j] === 1) numberData[i][j] = "";
+
+  drawGrid();
+}
+
+// NUMBER
+function setNumber() {
+  if (!selectedCell) return;
+
+  let { i, j } = selectedCell;
+
+  if (gridData[i][j] === 0) {
+    let num = prompt("Enter number:", numberData[i][j]);
+    if (num !== null) numberData[i][j] = num;
+    drawGrid();
+  }
+}
+
+// SAVE
 function savePuzzle() {
   const data = { size, gridData, numberData };
   localStorage.setItem("crossword", JSON.stringify(data));
   alert("Saved!");
 }
 
+// LOAD
 function loadPuzzle() {
   const data = JSON.parse(localStorage.getItem("crossword"));
+
   if (data) {
     size = data.size;
     gridData = data.gridData;
     numberData = data.numberData;
+
     document.getElementById("sizeInput").value = size;
     grid.style.gridTemplateColumns = `repeat(${size}, 45px)`;
+
     drawGrid();
   }
 }
