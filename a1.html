@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>11x11 Crossword Editor</title>
+<style>
+body { font-family: Arial; text-align: center; }
+.grid {
+  display: grid;
+  grid-template-columns: repeat(11, 45px);
+  gap: 0;
+  margin: 20px auto;
+}
+.cell {
+  width: 45px;
+  height: 45px;
+  border: 0.5px solid #999; /* lighter lines */
+  box-sizing: border-box;
+  position: relative;
+  cursor: pointer;
+}
+.white { background: white; }
+.black { background: black; }
+.number {
+  position: absolute;
+  top: 2px;
+  left: 4px;
+  font-size: 10px;
+  font-weight: bold;
+  color: black;
+}
+button { margin: 10px; padding: 10px; }
+</style>
+</head>
+<body>
+
+<h2>11x11 Crossword Editor (Manual)</h2>
+<p>Click = black/white | Double click = number</p>
+
+<div id="grid" class="grid"></div>
+
+<button onclick="savePuzzle()">Save</button>
+<button onclick="loadPuzzle()">Load</button>
+
+<script>
+const size = 11;
+let gridData = Array(size).fill().map(() => Array(size).fill(0));
+let numberData = Array(size).fill().map(() => Array(size).fill(""));
+
+const grid = document.getElementById("grid");
+
+function drawGrid() {
+  grid.innerHTML = "";
+
+  for (let i = 0; i < size; i++) {
+    for (let j = 0; j < size; j++) {
+      const cell = document.createElement("div");
+      cell.className = "cell " + (gridData[i][j] ? "black" : "white");
+
+      if (!gridData[i][j] && numberData[i][j]) {
+        const span = document.createElement("span");
+        span.className = "number";
+        span.innerText = numberData[i][j];
+        cell.appendChild(span);
+      }
+
+      // FIXED CLICK ISSUE
+      cell.addEventListener("click", function(e) {
+        e.preventDefault();
+        gridData[i][j] = gridData[i][j] ? 0 : 1;
+        if (gridData[i][j] === 1) numberData[i][j] = "";
+        drawGrid();
+      });
+
+      // DOUBLE CLICK FOR NUMBER
+      cell.addEventListener("dblclick", function(e) {
+        e.preventDefault();
+        if (gridData[i][j] === 0) {
+          let num = prompt("Enter number:", numberData[i][j]);
+          if (num !== null) numberData[i][j] = num;
+          drawGrid();
+        }
+      });
+
+      grid.appendChild(cell);
+    }
+  }
+}
+
+function savePuzzle() {
+  const data = { gridData, numberData };
+  localStorage.setItem("crossword", JSON.stringify(data));
+  alert("Saved!");
+}
+
+function loadPuzzle() {
+  const data = JSON.parse(localStorage.getItem("crossword"));
+  if (data) {
+    gridData = data.gridData;
+    numberData = data.numberData;
+    drawGrid();
+  }
+}
+
+drawGrid();
+</script>
+
+</body>
+</html>
