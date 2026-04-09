@@ -2,19 +2,18 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>11x11 Crossword Editor</title>
+<title>N x N Crossword Editor</title>
 <style>
 body { font-family: Arial; text-align: center; }
 .grid {
   display: grid;
-  grid-template-columns: repeat(11, 45px);
   gap: 0;
   margin: 20px auto;
 }
 .cell {
   width: 45px;
   height: 45px;
-  border: 0.5px solid #999; /* lighter lines */
+  border: 0.5px solid #999;
   box-sizing: border-box;
   position: relative;
   cursor: pointer;
@@ -29,13 +28,16 @@ body { font-family: Arial; text-align: center; }
   font-weight: bold;
   color: black;
 }
-button { margin: 10px; padding: 10px; }
+button, input { margin: 10px; padding: 8px; }
 </style>
 </head>
 <body>
 
-<h2>11x11 Crossword Editor (Manual)</h2>
+<h2>N x N Crossword Editor</h2>
 <p>Click = black/white | Double click = number</p>
+
+<input type="number" id="sizeInput" placeholder="Enter grid size (e.g. 11)">
+<button onclick="createGrid()">Create Grid</button>
 
 <div id="grid" class="grid"></div>
 
@@ -43,11 +45,26 @@ button { margin: 10px; padding: 10px; }
 <button onclick="loadPuzzle()">Load</button>
 
 <script>
-const size = 11;
-let gridData = Array(size).fill().map(() => Array(size).fill(0));
-let numberData = Array(size).fill().map(() => Array(size).fill(""));
+let size = 0;
+let gridData = [];
+let numberData = [];
 
 const grid = document.getElementById("grid");
+
+function createGrid() {
+  size = parseInt(document.getElementById("sizeInput").value);
+  if (!size || size < 2) {
+    alert("Enter valid size");
+    return;
+  }
+
+  grid.style.gridTemplateColumns = `repeat(${size}, 45px)`;
+
+  gridData = Array(size).fill().map(() => Array(size).fill(0));
+  numberData = Array(size).fill().map(() => Array(size).fill(""));
+
+  drawGrid();
+}
 
 function drawGrid() {
   grid.innerHTML = "";
@@ -64,7 +81,6 @@ function drawGrid() {
         cell.appendChild(span);
       }
 
-      // FIXED CLICK ISSUE
       cell.addEventListener("click", function(e) {
         e.preventDefault();
         gridData[i][j] = gridData[i][j] ? 0 : 1;
@@ -72,7 +88,6 @@ function drawGrid() {
         drawGrid();
       });
 
-      // DOUBLE CLICK FOR NUMBER
       cell.addEventListener("dblclick", function(e) {
         e.preventDefault();
         if (gridData[i][j] === 0) {
@@ -88,7 +103,7 @@ function drawGrid() {
 }
 
 function savePuzzle() {
-  const data = { gridData, numberData };
+  const data = { size, gridData, numberData };
   localStorage.setItem("crossword", JSON.stringify(data));
   alert("Saved!");
 }
@@ -96,13 +111,14 @@ function savePuzzle() {
 function loadPuzzle() {
   const data = JSON.parse(localStorage.getItem("crossword"));
   if (data) {
+    size = data.size;
     gridData = data.gridData;
     numberData = data.numberData;
+    document.getElementById("sizeInput").value = size;
+    grid.style.gridTemplateColumns = `repeat(${size}, 45px)`;
     drawGrid();
   }
 }
-
-drawGrid();
 </script>
 
 </body>
